@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b2a5b">
+<title>Delegimet</title>
+<style>
+  :root{
+    --navy:#0b2a5b; --blue:#1d4ed8; --soft:#c9daf1; --gray:#bfbfbf;
+    --bg:#f1f4f9; --card:#fff; --line:#d6dce8; --txt:#1c2333; --mut:#667089; --red:#c62828;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt)}
+  header.app{background:linear-gradient(135deg,var(--navy),#16438f);color:#fff;padding:18px 24px;display:flex;align-items:center;gap:14px}
+  header.app h1{margin:0;font-size:22px;letter-spacing:.3px}
+  header.app span{opacity:.75;font-size:13px}
+  main{max-width:1100px;margin:0 auto;padding:20px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 1px 3px rgba(11,42,91,.06)}
+  .panel h2{margin:0 0 14px;font-size:16px;color:var(--navy)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  label{display:block;font-size:12px;font-weight:600;color:var(--mut);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+  input,select{width:100%;padding:9px 10px;border:1px solid #c3cbdb;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:var(--txt)}
+  input[list],input.up,#commissioner,#refHead,input[name=home],input[name=away],input[name=city]{text-transform:uppercase}
+  input.bad{border-color:var(--red);background:#fff1f1}
+  input:focus,select:focus{outline:2px solid #93b4f5;border-color:var(--blue)}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  button{border:0;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:filter .15s}
+  button:hover{filter:brightness(1.08)}
+  .b-add{background:var(--blue);color:#fff}
+  .b-pdf{background:#0f766e;color:#fff}
+  .b-print{background:var(--navy);color:#fff}
+  .b-photo{background:#7c3aed;color:#fff}
+  .b-edit{background:#b45309;color:#fff}
+  .b-edit.on{background:#15803d}
+  .b-reset{background:var(--red);color:#fff}
+  .b-ghost{background:#e5eaf3;color:var(--navy)}
+  .b-del{background:#fde8e8;color:var(--red);padding:6px 12px}
+  .imgm{position:fixed;inset:0;background:rgba(10,20,40,.94);z-index:1000;overflow:auto;-webkit-overflow-scrolling:touch;padding:calc(12px + env(safe-area-inset-top)) 12px calc(24px + env(safe-area-inset-bottom));display:none}
+  .imgm.on{display:block}
+  .imgm .in{max-width:900px;margin:0 auto}
+  .imgm .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:sticky;top:0;background:rgba(10,20,40,.96);padding:8px 0;z-index:2}
+  .imgm .bar h4{margin:0;color:#fff;font-size:16px;flex:1 1 100%}
+  .imgm .tip{color:#cfd8ea;font-size:13px;line-height:1.5;margin:6px 0 4px}
+  .imgm img{width:100%;display:block;margin:12px 0 6px;background:#fff;border-radius:6px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
+  .imgm .dl{display:inline-block;text-decoration:none;background:#0f766e;color:#fff;border-radius:8px;padding:9px 16px;font-size:14px;font-weight:600;margin-bottom:10px}
+  .hint{font-size:12px;color:var(--mut);margin-top:10px}
+  .empty{text-align:center;color:var(--mut);padding:30px 10px}
+
+  /* ===== Fleta e delegimeve (ekran + print) ===== */
+  .sheet{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px 30px}
+  .sheet-head{text-align:center;margin-bottom:18px}
+  .sheet-head img{max-height:70px;display:block;margin:0 auto 12px}
+  .sheet-head h3{margin:0;font-family:"Times New Roman",serif;font-size:15px;font-weight:700}
+  table.m{width:100%;border-collapse:collapse;margin-bottom:22px;font-size:12px;page-break-inside:avoid;break-inside:avoid}
+  table.m th,table.m td{border:1px solid #000;padding:5px 6px;text-align:center;vertical-align:middle}
+  table.m th.head{background:var(--gray);font-size:12px;text-transform:uppercase;padding:3px}
+  table.m th.sub{background:var(--soft);font-weight:700}
+  table.m td.info{text-align:left;font-weight:700;width:25%;line-height:1.5;text-transform:uppercase}
+  table.m td.name{font-weight:700;text-transform:uppercase;height:30px}
+  .sheet-foot{display:flex;justify-content:space-between;margin-top:30px;padding:0 40px;font-weight:700;font-size:13px}
+  .sheet-foot div{line-height:1.5}
+  .sheet-foot .r{text-align:center}
+
+  /* Karta e editimit */
+  .edit-card{border:1px solid var(--line);border-left:4px solid #b45309;border-radius:10px;padding:14px;margin-bottom:14px;background:#fffaf3}
+  .edit-card .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:700;color:var(--navy)}
+
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{min-height:100vh;display:flex;flex-direction:column;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  main{width:100%;flex:1}
+  .sheet-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .sheet-scroll .inner{min-width:620px}
+  footer.powered{text-align:center;padding:14px 10px calc(18px + env(safe-area-inset-bottom));font-size:13px;font-weight:600;color:var(--mut);letter-spacing:.4px}
+  footer.powered b{color:var(--navy)}
+
+  @media (max-width:768px){
+    header.app{padding:14px 16px}
+    header.app h1{font-size:19px}
+    header.app span{display:none}
+    main{padding:12px}
+    .panel{padding:14px;border-radius:10px}
+    .grid{grid-template-columns:1fr 1fr;gap:10px}
+    input,select{font-size:16px;padding:10px}
+    .btns button{flex:1 1 calc(50% - 10px);padding:12px 10px}
+    .sheet{padding:14px 10px;border-radius:10px}
+    .sheet-foot{padding:0 6px;font-size:12px}
+    .edit-card{padding:10px}
+    .edit-card .top{flex-direction:column;align-items:flex-start;gap:8px}
+  }
+  @media (max-width:480px){
+    .grid{grid-template-columns:1fr}
+    .btns button{flex:1 1 100%}
+  }
+
+  @media print{
+    @page{size:A4 portrait;margin:14mm}
+    body{background:#fff}
+    header.app,.no-print{display:none!important}
+    main{max-width:none;padding:0}
+    .sheet{border:0;border-radius:0;padding:0;box-shadow:none}
+    table.m{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .sheet-scroll{overflow:visible}
+    .sheet-scroll .inner{min-width:0}
+    body{display:block;min-height:0}
+    footer.powered{padding:10px 0 0;font-size:10px;color:#444}
+  }
+</style>
+</head>
+<body>
+<header class="app">
+  <h1>Delegimet</h1>
+  <span>Delegimet e gjyqtarëve · Futsal Kosova</span>
+</header>
+
+<main>
+  <!-- Cilësimet e fletës -->
+  <section class="panel no-print">
+    <h2>Të dhënat e fletës</h2>
+    <div class="grid">
+      <div>
+        <label>Garat</label>
+        <select id="competition">
+          <option>Superliga e futsallit të Kosovës</option>
+          <option>Liga e Parë e futsallit të Kosovës</option>
+          <option>Kupa e Kosovës në futsall</option>
+        </select>
+      </div>
+      <div>
+        <label>Java / Raundi</label>
+        <input id="week" placeholder="p.sh. Java -7-të">
+      </div>
+      <div>
+        <label>Komisari i Garave</label>
+        <input id="commissioner" placeholder="Emri Mbiemri">
+      </div>
+      <div>
+        <label>Përgjegjës për referim</label>
+        <input id="refHead" placeholder="Emri Mbiemri">
+      </div>
+      <div>
+        <label>Logo (opsionale)</label>
+        <input type="file" id="logo" accept="image/*">
+      </div>
+    </div>
+    <div class="btns"><button class="b-ghost" id="removeLogo">Hiq logon</button></div>
+  </section>
+
+  <!-- Shto ndeshje -->
+  <section class="panel no-print">
+    <h2>Shto ndeshje</h2>
+    <form id="addForm" autocomplete="off">
+      <div class="grid">
+        <div><label>Skuadra 1</label><input name="home" list="dl-teams" required></div>
+        <div><label>Skuadra 2</label><input name="away" list="dl-teams" required></div>
+        <div><label>Data (DD/MM/VVVV)</label><input name="date" type="text" class="dt" inputmode="numeric" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" placeholder="p.sh. 30/10/2026"></div>
+        <div><label>Ora (24 orë)</label><input name="time" type="text" class="tm" inputmode="numeric" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" placeholder="HH:MM p.sh. 20:00"></div>
+        <div><label>Qyteti / Vendi</label><input name="city" list="dl-cities" required></div>
+        <div><label>Gjyqtari 1</label><input name="ref1" list="dl-refs"></div>
+        <div><label>Gjyqtari 2</label><input name="ref2" list="dl-refs"></div>
+        <div><label>Gjyqtari 3</label><input name="ref3" list="dl-refs"></div>
+        <div><label>Delegati</label><input name="delegate" list="dl-del"></div>
+        <div><label>Zyrtari për integritet dhe etikë</label><input name="integrity" list="dl-int"></div>
+      </div>
+      <div class="btns">
+        <button type="submit" class="b-add">+ Shto ndeshjen</button>
+      </div>
+    </form>
+    <datalist id="dl-teams"></datalist>
+    <datalist id="dl-cities"></datalist>
+    <datalist id="dl-refs"></datalist>
+    <datalist id="dl-del"></datalist>
+    <datalist id="dl-int"></datalist>
+  </section>
+
+  <!-- Butonat kryesorë -->
+  <section class="panel no-print">
+    <div class="btns" style="margin-top:0">
+      <button class="b-pdf" id="btnPdf">Ruaj delegimet PDF</button>
+      <button class="b-photo" id="btnPhoto">Ruaj Foto</button>
+      <button class="b-print" id="btnPrint">Printo</button>
+      <button class="b-edit" id="btnEdit">Edito</button>
+      <button class="b-reset" id="btnReset">Reseto</button>
+    </div>
+    <p class="hint">“Ruaj delegimet PDF” shkarkon direkt skedarin PDF. “Printo” hap dritaren e printimit. Të gjitha emrat shfaqen me shkronja të mëdha, ora është 24 orë, dhe të dhënat ruhen automatikisht në këtë shfletues (funksionon pa internet).</p>
+  </section>
+
+  <!-- Moduli i editimit -->
+  <section class="panel no-print" id="editPanel" style="display:none">
+    <h2>Editimi i delegimeve</h2>
+    <div id="editList"></div>
+    <div class="btns"><button class="b-edit on" id="btnDone">Përfundo editimin</button></div>
+  </section>
+
+  <!-- Fleta për printim -->
+  <section class="sheet" id="sheet">
+    <div class="sheet-head">
+      <img id="sheetLogo" alt="" style="display:none">
+      <h3 id="sheetTitle"></h3>
+    </div>
+    <div class="sheet-scroll"><div class="inner"><div id="matches"></div></div></div>
+    <div class="sheet-foot">
+      <div><span>Komisari i Garave</span><br><span id="fCom"></span></div>
+      <div class="r"><span>Përgjegjës për referim</span><br><span id="fRef"></span></div>
+    </div>
+  </section>
+</main>
+
+<div class="imgm no-print" id="imgModal">
+  <div class="in">
+    <div class="bar">
+      <h4>Delegimet si foto</h4>
+      <button class="b-photo" id="btnShare" style="display:none">Ruaj në galeri / Ndaj</button>
+      <button class="b-ghost" id="btnCloseImg">Mbyll</button>
+    </div>
+    <p class="tip"><b>iPhone / iPad:</b> shtyp gjatë mbi fotot dhe zgjidh “Add to Photos” / “Ruaj në Foto”. <b>Samsung / Android:</b> shtyp gjatë mbi foto dhe zgjidh “Download image” / “Ruaj imazhin”. <b>Laptop:</b> kliko “Shkarko foton” ose kliko me të djathtën dhe “Save image as”.</p>
+    <div id="imgList"></div>
+  </div>
+</div>
+
+<footer class="powered">Powered: <b>DataPOS</b></footer>
+
+<script>
+(function(){
+  var KEY = 'delegimet_v1';
+  var DAYS = ['E DIELË','E HËNË','E MARTË','E MËRKURË','E ENJTE','E PREMTE','E SHTUNË'];
+  var state = { competition:'Superliga e futsallit të Kosovës', week:'', commissioner:'', refHead:'', logo:'', matches:[] };
+  var editMode = false;
+
+  function load(){
+    try{ var s = localStorage.getItem(KEY); if(s){ var o = JSON.parse(s); for(var k in o) state[k]=o[k]; } }catch(e){}
+  }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+  function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function $(id){ return document.getElementById(id); }
+
+  function up(s){ return String(s==null?'':s).toUpperCase(); }
+  var TIME_RE = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
+  function pad2(x){ return ('0'+x).slice(-2); }
+  function parseTime(t){
+    var r = /^\s*(\d{1,2})\s*[:.]?\s*(\d{2})\s*$/.exec(t||'');
+    if(!r) return '';
+    var v = pad2(r[1])+':'+r[2];
+    return TIME_RE.test(v) ? v : '';
+  }
+  function parseDate(t){
+    var r = /^\s*(\d{1,2})\s*[.\/\-]?\s*(\d{1,2})\s*[.\/\-]?\s*(\d{4})\s*$/.exec(t||'');
+    if(!r) return '';
+    var d=+r[1], mo=+r[2], y=+r[3], dt = new Date(y, mo-1, d);
+    if(dt.getFullYear()!==y || dt.getMonth()!==mo-1 || dt.getDate()!==d) return '';
+    return y+'-'+pad2(mo)+'-'+pad2(d);
+  }
+  // Shkrim manual: vetëm shifra; "/" dhe ":" shtohen automatikisht (pa pasur nevojë t'i shkruash)
+  function fmtDateTyped(v){
+    var d = String(v).replace(/\D/g,'').slice(0,8);
+    return d.slice(0,2) + (d.length>2 ? '/'+d.slice(2,4) : '') + (d.length>4 ? '/'+d.slice(4) : '');
+  }
+  function fmtTimeTyped(v){
+    var d = String(v).replace(/\D/g,'').slice(0,4);
+    return d.slice(0,2) + (d.length>2 ? ':'+d.slice(2) : '');
+  }
+  document.addEventListener('input', function(e){
+    var el = e.target, cl = el.classList;
+    if(!cl || !(cl.contains('tm') || cl.contains('dt'))) return;
+    var out = cl.contains('dt') ? fmtDateTyped(el.value) : fmtTimeTyped(el.value);
+    if(out!==el.value){
+      el.value = out;
+      try{ el.setSelectionRange(out.length,out.length); }catch(x){}
+    }
+  }, true);
+  function dayName(d){
+    if(!d) return '';
+    var p = d.split('-'); var dt = new Date(+p[0], +p[1]-1, +p[2]);
+    return DAYS[dt.getDay()];
+  }
+  function fmtDate(d){ if(!d) return ''; var p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0]; }
+  function sortMatches(){
+    // Data më e hershme e para; në të njëjtën ditë, sipas orës (24h)
+    function key(m){ return (m.date||'9999-99-99') + ' ' + (TIME_RE.test(m.time||'') ? m.time : '99:99'); }
+    state.matches.sort(function(a,b){ var ka=key(a), kb=key(b); return ka<kb?-1:ka>kb?1:(a.id-b.id); });
+  }
+
+  function renderSheet(){
+    $('sheetTitle').textContent = (state.competition + ' ' + (state.week||'')).trim();
+    var lg = $('sheetLogo');
+    if(state.logo){ lg.src = state.logo; lg.style.display='block'; } else { lg.style.display='none'; }
+    $('fCom').textContent = up(state.commissioner);
+    $('fRef').textContent = up(state.refHead);
+
+    var box = $('matches');
+    if(!state.matches.length){
+      box.innerHTML = '<div class="empty no-print">Nuk ka delegime. Shtoni ndeshjen e parë më sipër.</div>';
+      return;
+    }
+    var h = '';
+    state.matches.forEach(function(m){
+      var hasInt = !!(m.integrity && m.integrity.trim());
+      var cols = 5 + (hasInt?1:0) - 0; // info + 3 gjyqtarë + delegati (+ integriteti)
+      h += '<table class="m">';
+      h += '<tr><th class="head" colspan="'+cols+'">'+esc(up(m.home))+' – '+esc(up(m.away))+'</th></tr>';
+      h += '<tr><td class="info" rowspan="2">Dita: '+esc(dayName(m.date))+'<br>Data: '+esc(fmtDate(m.date))+'<br>Ora: '+esc(m.time)+'<br>Vendi: '+esc(up(m.city))+'</td>';
+      h += '<th class="sub">Gjyqtari</th><th class="sub">Gjyqtari</th><th class="sub">Gjyqtari</th><th class="sub">Delegati</th>';
+      if(hasInt) h += '<th class="sub">Zyrtari për integritet dhe etikë</th>';
+      h += '</tr><tr>';
+      h += '<td class="name">'+esc(up(m.ref1))+'</td><td class="name">'+esc(up(m.ref2))+'</td><td class="name">'+esc(up(m.ref3))+'</td><td class="name">'+esc(up(m.delegate))+'</td>';
+      if(hasInt) h += '<td class="name">'+esc(up(m.integrity))+'</td>';
+      h += '</tr></table>';
+    });
+    box.innerHTML = h;
+  }
+
+  function renderEdit(){
+    var p = $('editPanel');
+    p.style.display = editMode ? 'block' : 'none';
+    $('btnEdit').classList.toggle('on', editMode);
+    $('btnEdit').textContent = editMode ? 'Duke editur…' : 'Edito';
+    if(!editMode) return;
+    var list = $('editList');
+    if(!state.matches.length){ list.innerHTML = '<div class="empty">Nuk ka ndeshje për të edituar.</div>'; return; }
+    var f = [
+      ['home','Skuadra 1','text','dl-teams'],['away','Skuadra 2','text','dl-teams'],
+      ['date','Data','date'],['time','Ora','time'],['city','Qyteti / Vendi','text','dl-cities'],
+      ['ref1','Gjyqtari 1','text','dl-refs'],['ref2','Gjyqtari 2','text','dl-refs'],['ref3','Gjyqtari 3','text','dl-refs'],
+      ['delegate','Delegati','text','dl-del'],['integrity','Zyrtari për integritet dhe etikë','text','dl-int']
+    ];
+    var h='';
+    state.matches.forEach(function(m){
+      h += '<div class="edit-card" data-id="'+m.id+'"><div class="top"><span>'+esc(m.home)+' – '+esc(m.away)+'</span><button class="b-del" data-del="'+m.id+'">Fshij ndeshjen</button></div><div class="grid">';
+      f.forEach(function(x){
+        var isT = x[2]==='time';
+        if(isT){ h += '<div><label>Ora (24 orë)</label><input type="text" class="tm" inputmode="numeric" autocomplete="off" placeholder="HH:MM" data-f="time" value="'+esc(m.time)+'"></div>'; return; }
+        if(x[2]==='date'){ h += '<div><label>Data (DD/MM/VVVV)</label><input type="text" class="dt" inputmode="numeric" autocomplete="off" placeholder="DD/MM/VVVV" data-f="date" value="'+esc(fmtDate(m.date).replace(/\./g,'/'))+'"></div>'; return; }
+        h += '<div><label>'+(isT?'Ora (24 orë)':x[1])+'</label><input type="'+(isT?'text':x[2])+'" data-f="'+x[0]+'" '+(x[3]?'list="'+x[3]+'" ':'')+(isT?'class="tm" inputmode="numeric" maxlength="5" placeholder="HH:MM" ':'')+(x[2]==='text'?'class="up" ':'')+'value="'+esc(m[x[0]])+'"></div>';
+      });
+      h += '</div></div>';
+    });
+    list.innerHTML = h;
+  }
+
+  function renderLists(){
+    var sets = { 'dl-teams':{}, 'dl-cities':{}, 'dl-refs':{}, 'dl-del':{}, 'dl-int':{} };
+    state.matches.forEach(function(m){
+      sets['dl-teams'][m.home]=1; sets['dl-teams'][m.away]=1; sets['dl-cities'][m.city]=1;
+      sets['dl-refs'][m.ref1]=1; sets['dl-refs'][m.ref2]=1; if(m.ref3) sets['dl-refs'][m.ref3]=1;
+      sets['dl-del'][m.delegate]=1; if(m.integrity) sets['dl-int'][m.integrity]=1;
+    });
+    for(var id in sets){
+      $(id).innerHTML = Object.keys(sets[id]).filter(Boolean).map(function(v){return '<option value="'+esc(v)+'">';}).join('');
+    }
+  }
+
+  function renderAll(){ sortMatches(); renderSheet(); renderEdit(); renderLists(); }
+
+  /* Cilësimet */
+  function bindSettings(){
+    $('competition').value = state.competition;
+    $('week').value = state.week; $('commissioner').value = state.commissioner; $('refHead').value = state.refHead;
+    ['competition','week','commissioner','refHead'].forEach(function(id){
+      $(id).addEventListener('input', function(){ state[id] = (id==='commissioner'||id==='refHead') ? up(this.value) : this.value; save(); renderSheet(); });
+    });
+    $('logo').addEventListener('change', function(){
+      var file = this.files[0]; if(!file) return;
+      var r = new FileReader();
+      r.onload = function(){ state.logo = r.result; save(); renderSheet(); };
+      r.readAsDataURL(file);
+    });
+    $('removeLogo').addEventListener('click', function(){ state.logo=''; $('logo').value=''; save(); renderSheet(); });
+  }
+
+  /* Shto ndeshje */
+  $('addForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var fd = new FormData(this), m = { id: Date.now()+Math.floor(Math.random()*1000) };
+    ['home','away','date','time','city','ref1','ref2','ref3','delegate','integrity'].forEach(function(k){
+      var v = (fd.get(k)||'').toString().trim();
+      m[k] = k==='date' ? parseDate(v) : k==='time' ? parseTime(v) : up(v);
+    });
+    if(!m.date && (fd.get('date')||'').toString().trim()){ alert('Data nuk është e saktë, p.sh. 30/10/2026 (ose lëreni bosh).'); return; }
+    if(!m.time && (fd.get('time')||'').toString().trim()){ alert('Ora nuk është e saktë, formati 24 orë p.sh. 20:00 (ose lëreni bosh).'); return; }
+    state.matches.push(m); save(); renderAll();
+    this.reset(); this.elements.home.focus();
+  });
+
+  /* Editimi */
+  $('editList').addEventListener('input', function(e){
+    var inp = e.target; if(!inp.dataset.f) return;
+    var id = +inp.closest('.edit-card').dataset.id;
+    var m = state.matches.filter(function(x){return x.id===id;})[0];
+    if(!m) return;
+    var f = inp.dataset.f, v = inp.value;
+    if(f==='time'){ if(v.trim()){ v = parseTime(v); if(!v) return; } else v=''; }
+    else if(f==='date'){ if(v.trim()){ v = parseDate(v); if(!v) return; } else v=''; }
+    else { v = up(v); }
+    m[f] = v; save(); renderSheet(); renderLists();
+  });
+  $('editList').addEventListener('click', function(e){
+    var id = e.target.dataset && e.target.dataset.del; if(!id) return;
+    if(confirm('Të fshihet kjo ndeshje?')){
+      state.matches = state.matches.filter(function(x){return x.id!==+id;});
+      save(); renderAll();
+    }
+  });
+  $('btnEdit').addEventListener('click', function(){ editMode = !editMode; renderEdit(); if(editMode) $('editPanel').scrollIntoView({behavior:'smooth'}); });
+  $('btnDone').addEventListener('click', function(){ editMode=false; renderAll(); });
+
+  /* Reseto */
+  $('btnReset').addEventListener('click', function(){
+    if(!state.matches.length){ alert('Nuk ka delegime për t’u fshirë.'); return; }
+    if(confirm('Të fshihen TË GJITHA delegimet? Ky veprim nuk kthehet mbrapa.')){
+      state.matches = []; editMode=false; save(); renderAll();
+    }
+  });
+
+  /* Printo / Ruaj PDF */
+  function checkAny(){ if(!state.matches.length){ alert('Shtoni së paku një ndeshje para printimit.'); return false; } return true; }
+  $('btnPrint').addEventListener('click', function(){ if(checkAny()){ editMode=false; renderEdit(); window.print(); } });
+  /* ====== Gjenerues PDF (offline, pa varësi) ====== */
+  var PW = 794, PH = 1123, MX = 40, MT = 36, MB = 40;
+  var mc = document.createElement('canvas').getContext('2d');
+  function tw(s, size, font){
+    mc.font = (font==='F2'?'bold ':'') + (font==='F3'?'bold ':'') + size + 'px ' + (font==='F3'?'"Times New Roman",Times,serif':'Arial,Helvetica,sans-serif');
+    return mc.measureText(s).width;
+  }
+  function wrap(text, maxW, size, font){
+    var words = String(text).split(/\s+/).filter(Boolean), lines = [], cur = '';
+    words.forEach(function(w){
+      var t = cur ? cur+' '+w : w;
+      if(tw(t,size,font) <= maxW || !cur){ cur = t; } else { lines.push(cur); cur = w; }
+    });
+    if(cur) lines.push(cur);
+    return lines;
+  }
+  function pdfStr(s){
+    s = String(s).replace(/–/g,'\u0096').replace(/[^\u0000-\u00FF]/g,'?');
+    return s.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');
+  }
+  function bytes(s){ var a = new Uint8Array(s.length); for(var i=0;i<s.length;i++) a[i]=s.charCodeAt(i)&255; return a; }
+  function n(x){ return (Math.round(x*100)/100).toString(); }
+
+  function buildPdf(img){
+    var pages = [], ops = [], y = MT, gap = 14;
+    function newPage(){ if(ops.length) pages.push(ops.join('\n')); ops = []; y = MT; }
+    function rect(x, top, w, h, fill){
+      var by = PH - top - h;
+      if(fill) ops.push(fill+' rg '+n(x)+' '+n(by)+' '+n(w)+' '+n(h)+' re f');
+      ops.push('0 G 0.8 w '+n(x)+' '+n(by)+' '+n(w)+' '+n(h)+' re S');
+    }
+    function text(s, x, baseTop, size, font, gray){
+      ops.push('BT /'+font+' '+n(size)+' Tf '+(gray||'0')+' g '+n(x)+' '+n(PH-baseTop)+' Td ('+pdfStr(s)+') Tj ET');
+    }
+    function centerLines(lines, x, top, w, h, size, font){
+      var lh = size*1.2, total = lines.length*lh, start = top + (h-total)/2 + size*0.95;
+      lines.forEach(function(l,i){ text(l, x + (w - tw(l,size,font))/2, start + i*lh, size, font); });
+    }
+    function fitCell(s, w, h, size, font){
+      var sz = size, lines;
+      while(true){
+        lines = wrap(s, w-8, sz, font);
+        var okW = lines.every(function(l){ return tw(l,sz,font) <= w-6; });
+        if((lines.length*sz*1.2 <= h-4 && okW) || sz<=5.5) break;
+        sz -= 0.5;
+      }
+      return {lines:lines, size:sz};
+    }
+    function powered(){
+      var t = 'Powered: DataPOS';
+      text(t, (PW-tw(t,10,'F2'))/2, PH-18, 10, 'F2', '0.4');
+    }
+    function title(){
+      var t = (state.competition+' '+(state.week||'')).trim();
+      if(img){
+        var ih = 60, iw = img.w*ih/img.h; if(iw>240){ iw=240; ih=img.h*iw/img.w; }
+        ops.push('q '+n(iw)+' 0 0 '+n(ih)+' '+n((PW-iw)/2)+' '+n(PH-y-ih)+' cm /Im1 Do Q');
+        y += ih + 12;
+      }
+      text(t, (PW-tw(t,22,'F3'))/2, y+20, 22, 'F3');
+      y += 46;
+    }
+    function footer(){
+      y += 10;
+      var sz = 12, lx = MX+20;
+      text('Komisari i Garave', lx, y+sz, sz, 'F2');
+      text(up(state.commissioner), lx, y+sz*2.3, sz, 'F2');
+      var r = 'Përgjegjës për referim', rw = tw(r,sz,'F2'), rx = PW-MX-20-rw;
+      text(r, rx, y+sz, sz, 'F2');
+      var nm = up(state.refHead);
+      text(nm, rx + (rw-tw(nm,sz,'F2'))/2, y+sz*2.3, sz, 'F2');
+      y += sz*3;
+    }
+    function drawMatch(m, x, top, w, s){
+      var hasInt = !!(m.integrity && m.integrity.trim());
+      var HH = 18*s, subH = (hasInt?36:22)*s, nameH = (hasInt?24:34)*s;
+      var wi = w*0.27, rest = w - wi, k = hasInt?5:4;
+      var cw = []; for(var i=0;i<k;i++) cw.push(rest/k);
+      rect(x, top, w, HH, '0.75 0.75 0.75');
+      var head = up(m.home)+' – '+up(m.away), hs = 10*s;
+      while(tw(head,hs,'F2') > w-10 && hs>6) hs-=0.5;
+      text(head, x+(w-tw(head,hs,'F2'))/2, top+HH/2+hs*0.35, hs, 'F2');
+      var top2 = top+HH;
+      rect(x, top2, wi, subH+nameH, null);
+      var info = ['Dita: '+dayName(m.date), 'Data: '+fmtDate(m.date), 'Ora: '+m.time, 'Vendi: '+up(m.city)];
+      var isz = 9*s, ilh = 12.5*s, istart = top2 + (subH+nameH - info.length*ilh)/2 + isz*0.9;
+      var sz = isz;
+      while(sz>5 && info.some(function(l){ return tw(l,sz,'F2') > wi-10; })) sz -= 0.5;
+      info.forEach(function(l,i){ text(l, x+5, istart+i*ilh, sz, 'F2'); });
+      var heads = ['Gjyqtari','Gjyqtari','Gjyqtari','Delegati'];
+      var vals = [up(m.ref1),up(m.ref2),up(m.ref3),up(m.delegate)];
+      if(hasInt){ heads.push('ZYRTARI PËR INTEGRITET DHE ETIKË'); vals.push(up(m.integrity)); }
+      var cx = x+wi;
+      heads.forEach(function(hd,i){
+        rect(cx, top2, cw[i], subH, '0.788 0.855 0.945');
+        var f = fitCell(hd, cw[i], subH, 9*s, 'F2');
+        centerLines(f.lines, cx, top2, cw[i], subH, f.size, 'F2');
+        rect(cx, top2+subH, cw[i], nameH, null);
+        if(vals[i]){
+          var g = fitCell(vals[i], cw[i], nameH, 9*s, 'F2');
+          centerLines(g.lines, cx, top2+subH, cw[i], nameH, g.size, 'F2');
+        }
+        cx += cw[i];
+      });
+    }
+
+    // Faqe A4 portrait: ndeshjet njëra poshtë tjetrës (një kolonë)
+    title();
+    var sc = 1.25, rowH = 78*sc, total = state.matches.length;
+    for(var i=0; i<total; i++){
+      if(y + rowH > PH - 70){ newPage(); title(); }
+      drawMatch(state.matches[i], MX, y, PW - 2*MX, sc);
+      y += rowH + gap;
+    }
+    if(y + 60 > PH - 40){ newPage(); }
+    footer();
+    pages.push(ops.join('\n'));
+    pages = pages.map(function(p){ return p; });
+    // "Powered" në çdo faqe
+    var pwr = [];
+    (function(){ var keep = ops; pwr = pages.map(function(p){ ops = []; powered(); var add = ops.join('\n'); return p + '\n' + add; }); ops = keep; })();
+    pages = pwr;
+
+    // ---- Mbledhja e objekteve ----
+    var objs = [];
+    function add(parts){ objs.push(parts); return objs.length; }
+    var catalogId = add(null), pagesId = add(null);
+    var f1 = add(['<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>']);
+    var f2 = add(['<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>']);
+    var f3 = add(['<< /Type /Font /Subtype /Type1 /BaseFont /Times-Bold /Encoding /WinAnsiEncoding >>']);
+    var imId = 0;
+    if(img){
+      imId = add(['<< /Type /XObject /Subtype /Image /Width '+img.w+' /Height '+img.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+img.data.length+' >>\nstream\n', img.data, '\nendstream']);
+    }
+    var kids = [];
+    pages.forEach(function(c){
+      var cb = bytes(c);
+      var cid = add(['<< /Length '+cb.length+' >>\nstream\n', cb, '\nendstream']);
+      var pid = add(['<< /Type /Page /Parent '+pagesId+' 0 R /MediaBox [0 0 '+PW+' '+PH+'] /Resources << /Font << /F1 '+f1+' 0 R /F2 '+f2+' 0 R /F3 '+f3+' 0 R >>'+(imId?' /XObject << /Im1 '+imId+' 0 R >>':'')+' >> /Contents '+cid+' 0 R >>']);
+      kids.push(pid+' 0 R');
+    });
+    objs[catalogId-1] = ['<< /Type /Catalog /Pages '+pagesId+' 0 R >>'];
+    objs[pagesId-1] = ['<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+kids.length+' >>'];
+
+    var chunks = [], pos = 0, offsets = [];
+    function push(x){ var b = (typeof x==='string') ? bytes(x) : x; chunks.push(b); pos += b.length; }
+    push('%PDF-1.4\n');
+    objs.forEach(function(parts, i){
+      offsets.push(pos);
+      push((i+1)+' 0 obj\n');
+      parts.forEach(push);
+      push('\nendobj\n');
+    });
+    var xref = pos;
+    var x = 'xref\n0 '+(objs.length+1)+'\n0000000000 65535 f \n';
+    offsets.forEach(function(o){ x += ('0000000000'+o).slice(-10)+' 00000 n \n'; });
+    x += 'trailer\n<< /Size '+(objs.length+1)+' /Root '+catalogId+' 0 R >>\nstartxref\n'+xref+'\n%%EOF';
+    push(x);
+    return new Blob(chunks, {type:'application/pdf'});
+  }
+
+  function loadLogoJpeg(cb){
+    if(!state.logo){ cb(null); return; }
+    var im = new Image();
+    im.onload = function(){
+      try{
+        var c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+        var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(im,0,0);
+        var b64 = c.toDataURL('image/jpeg',0.92).split(',')[1], bin = atob(b64), a = new Uint8Array(bin.length);
+        for(var i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i);
+        cb({data:a, w:c.width, h:c.height});
+      }catch(e){ cb(null); }
+    };
+    im.onerror = function(){ cb(null); };
+    im.src = state.logo;
+  }
+
+  $('btnPdf').addEventListener('click', function(){
+    if(!checkAny()) return;
+    loadLogoJpeg(function(img){
+      var blob = buildPdf(img);
+      var name = 'Delegimet - ' + (state.competition + ' ' + (state.week||'')).trim().replace(/[\\\/:*?"<>|]+/g,'') + '.pdf';
+      var url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = name; document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 2000);
+    });
+  });
+
+
+  /* ====== Ruaj Foto (PNG, funksionon në çdo pajisje) ====== */
+  function loadLogoEl(cb){
+    if(!state.logo){ cb(null); return; }
+    var im = new Image();
+    im.onload = function(){ cb(im); };
+    im.onerror = function(){ cb(null); };
+    im.src = state.logo;
+  }
+  function buildImages(logoEl){
+    var K = 2, pages = [], g = null, y = MT, gap = 14;
+    function fontStr(size, font){ return (font==='F2'||font==='F3'?'bold ':'') + size + 'px ' + (font==='F3'?'"Times New Roman",Times,serif':'Arial,Helvetica,sans-serif'); }
+    function rect(x, top, w, h, fill){
+      if(fill){ g.fillStyle = fill; g.fillRect(x, top, w, h); }
+      g.strokeStyle = '#000'; g.lineWidth = 0.8; g.strokeRect(x, top, w, h);
+    }
+    function text(s, x, base, size, font, color){
+      g.font = fontStr(size, font); g.fillStyle = color || '#000'; g.textBaseline = 'alphabetic'; g.fillText(s, x, base);
+    }
+    function centerLines(lines, x, top, w, h, size, font){
+      var lh = size*1.2, total = lines.length*lh, start = top + (h-total)/2 + size*0.95;
+      lines.forEach(function(l,i){ text(l, x + (w - tw(l,size,font))/2, start + i*lh, size, font); });
+    }
+    function fitCell(s, w, h, size, font){
+      var sz = size, lines;
+      while(true){
+        lines = wrap(s, w-8, sz, font);
+        var okW = lines.every(function(l){ return tw(l,sz,font) <= w-6; });
+        if((lines.length*sz*1.2 <= h-4 && okW) || sz<=5.5) break;
+        sz -= 0.5;
+      }
+      return {lines:lines, size:sz};
+    }
+    function powered(){ var t = 'Powered: DataPOS'; text(t, (PW-tw(t,10,'F2'))/2, PH-18, 10, 'F2', '#666'); }
+    function newPage(){
+      var cv = document.createElement('canvas'); cv.width = PW*K; cv.height = PH*K;
+      g = cv.getContext('2d'); g.scale(K,K); g.fillStyle = '#fff'; g.fillRect(0,0,PW,PH);
+      pages.push(cv); y = MT; powered();
+    }
+    function title(){
+      var t = (state.competition+' '+(state.week||'')).trim();
+      if(logoEl && logoEl.naturalWidth){
+        var ih = 60, iw = logoEl.naturalWidth*ih/logoEl.naturalHeight; if(iw>240){ iw=240; ih=logoEl.naturalHeight*iw/logoEl.naturalWidth; }
+        g.drawImage(logoEl, (PW-iw)/2, y, iw, ih);
+        y += ih + 12;
+      }
+      text(t, (PW-tw(t,22,'F3'))/2, y+20, 22, 'F3');
+      y += 46;
+    }
+    function footer(){
+      y += 10;
+      var sz = 12, lx = MX+20;
+      text('Komisari i Garave', lx, y+sz, sz, 'F2');
+      text(up(state.commissioner), lx, y+sz*2.3, sz, 'F2');
+      var r = 'Përgjegjës për referim', rw = tw(r,sz,'F2'), rx = PW-MX-20-rw;
+      text(r, rx, y+sz, sz, 'F2');
+      var nm = up(state.refHead);
+      text(nm, rx + (rw-tw(nm,sz,'F2'))/2, y+sz*2.3, sz, 'F2');
+      y += sz*3;
+    }
+    function drawMatch(m, x, top, w, s){
+      var hasInt = !!(m.integrity && m.integrity.trim());
+      var HH = 18*s, subH = (hasInt?36:22)*s, nameH = (hasInt?24:34)*s;
+      var wi = w*0.27, rest = w - wi, k = hasInt?5:4, cw = rest/k;
+      rect(x, top, w, HH, '#bfbfbf');
+      var head = up(m.home)+' – '+up(m.away), hs = 10*s;
+      while(tw(head,hs,'F2') > w-10 && hs>6) hs-=0.5;
+      text(head, x+(w-tw(head,hs,'F2'))/2, top+HH/2+hs*0.35, hs, 'F2');
+      var top2 = top+HH;
+      rect(x, top2, wi, subH+nameH, null);
+      var info = ['Dita: '+dayName(m.date), 'Data: '+fmtDate(m.date), 'Ora: '+m.time, 'Vendi: '+up(m.city)];
+      var isz = 9*s, ilh = 12.5*s, istart = top2 + (subH+nameH - info.length*ilh)/2 + isz*0.9;
+      var sz = isz;
+      while(sz>5 && info.some(function(l){ return tw(l,sz,'F2') > wi-10; })) sz -= 0.5;
+      info.forEach(function(l,i){ text(l, x+5, istart+i*ilh, sz, 'F2'); });
+      var heads = ['Gjyqtari','Gjyqtari','Gjyqtari','Delegati'];
+      var vals = [up(m.ref1),up(m.ref2),up(m.ref3),up(m.delegate)];
+      if(hasInt){ heads.push('ZYRTARI PËR INTEGRITET DHE ETIKË'); vals.push(up(m.integrity)); }
+      var cx = x+wi;
+      heads.forEach(function(hd,i){
+        rect(cx, top2, cw, subH, '#c9dbf1');
+        var f = fitCell(hd, cw, subH, 9*s, 'F2');
+        centerLines(f.lines, cx, top2, cw, subH, f.size, 'F2');
+        rect(cx, top2+subH, cw, nameH, null);
+        if(vals[i]){
+          var gg = fitCell(vals[i], cw, nameH, 9*s, 'F2');
+          centerLines(gg.lines, cx, top2+subH, cw, nameH, gg.size, 'F2');
+        }
+        cx += cw;
+      });
+    }
+    newPage(); title();
+    var sc = 1.25, rowH = 78*sc;
+    state.matches.forEach(function(m){
+      if(y + rowH > PH - 70){ newPage(); title(); }
+      drawMatch(m, MX, y, PW - 2*MX, sc);
+      y += rowH + gap;
+    });
+    if(y + 60 > PH - 40){ newPage(); }
+    footer();
+    return pages;
+  }
+
+  var imgUrls = [], imgFiles = [];
+  function closeImgModal(){
+    $('imgModal').classList.remove('on'); document.body.style.overflow = '';
+    imgUrls.forEach(function(u){ try{ URL.revokeObjectURL(u); }catch(e){} });
+    imgUrls = []; imgFiles = []; $('imgList').innerHTML = '';
+  }
+  function showImages(blobs){
+    var base = 'Delegimet - ' + (state.competition + ' ' + (state.week||'')).trim().replace(/[\\\/:*?"<>|]+/g,'');
+    var h = '';
+    imgUrls = []; imgFiles = [];
+    blobs.forEach(function(b, i){
+      var name = base + (blobs.length>1 ? ' - ' + (i+1) : '') + '.png';
+      var url = URL.createObjectURL(b); imgUrls.push(url);
+      try{ imgFiles.push(new File([b], name, {type:'image/png'})); }catch(e){}
+      h += '<img src="'+url+'" alt="'+esc(name)+'">';
+      h += '<a class="dl" href="'+url+'" download="'+esc(name)+'">Shkarko foton'+(blobs.length>1?' '+(i+1):'')+'</a>';
+    });
+    $('imgList').innerHTML = h;
+    var canShare = false;
+    try{ canShare = !!(navigator.canShare && imgFiles.length && navigator.canShare({files: imgFiles})); }catch(e){}
+    $('btnShare').style.display = canShare ? '' : 'none';
+    $('imgModal').classList.add('on'); $('imgModal').scrollTop = 0; document.body.style.overflow = 'hidden';
+  }
+  $('btnPhoto').addEventListener('click', function(){
+    if(!checkAny()) return;
+    editMode = false; renderEdit();
+    loadLogoEl(function(el){
+      var cvs = buildImages(el), out = [], i = 0;
+      (function next(){
+        if(i >= cvs.length){ showImages(out); return; }
+        cvs[i].toBlob(function(b){ if(b) out.push(b); i++; next(); }, 'image/png');
+      })();
+    });
+  });
+  $('btnCloseImg').addEventListener('click', closeImgModal);
+  $('btnShare').addEventListener('click', function(){
+    if(!imgFiles.length) return;
+    var p = navigator.share({files: imgFiles, title: 'Delegimet'});
+    if(p && p.catch) p.catch(function(){});
+  });
+
+  load(); bindSettings(); renderAll();
+})();
+</script>
+</body>
+</html>
